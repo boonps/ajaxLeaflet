@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>ajaxweb2</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+		integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+		crossorigin="" />
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+	<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+		integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+		crossorigin=""></script>
+	<script type="text/javascript" src="./data/plkvill.js"></script>
+	<script src="https://code.jquery.com/jquery-3.2.1.js"></script>
+
+
+</head>
+
+<body>
+
+	<div id="mapid" style="width: 800px; height: 600px;"></div>
+	<script>
+		var map = L.map('mapid').setView([13.844967, 100.577879], 10);
+
+		var showpoint = L.geoJSON();
+
+
+
+
+		// var owsrootUrl = 'http://www3.cgistln.nu.ac.th:8080/geoserver/dnre2/ows';
+
+		// var defaultParameters = {
+		// 	service: 'WFS',
+		// 	version: '1.0.0',
+		// 	request: 'GetFeature',
+		// 	typeName: 'dnre2:pointnu',
+		// 	outputFormat: 'application/json'
+		// };
+		// var parameters = L.Util.extend(defaultParameters);
+
+		// var URL = owsrootUrl + L.Util.getParamString(parameters);
+
+		// $.ajax({
+		// 	url: URL,
+		// 	success: function (data) {
+		// 		var geojson = new L.geoJson(data, {
+
+		// 			onEachFeature: function (feature, layer) {
+		// 				layer.bindPopup("Has hecho click en " + feature.properties.name);
+		// 			}
+		// 		}).addTo(map);
+		// 	}
+		// });
+
+
+
+
+
+
+
+		var osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+		var osmAttrib = 'Map data © OpenStreetMap contributors';
+		var osm = new L.TileLayer(osmUrl, {
+			attribution: osmAttrib
+		});
+
+
+		var Stamen_Watercolor = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.{ext}', {
+			attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+			subdomains: 'abcd',
+			minZoom: 1,
+			maxZoom: 16,
+			ext: 'jpg'
+		});
+
+		var baseLayers = {
+			"Streets": osm,
+			"WaterColor": Stamen_Watercolor
+		};
+
+
+		var ricearea = L.tileLayer.wms('http://ecoplant.gistda.or.th/rest/gis/wms?', {
+			layers: 'ecoplant:rice_01',
+			format: 'image/png',
+			transparent: true,
+			opacity: 0.7,
+		});
+
+
+
+		var markerGroup = L.layerGroup();
+
+		var myIcon = L.icon({
+			iconUrl: './data/marker_red.png',
+			iconSize: [38, 38],
+		});
+		var marker_arr = [];
+
+		map.on("click", function (e) {
+			if (marker_arr.length > 0) {
+				for (i = 0; i < marker_arr.length; i++) {
+					map.removeLayer(marker_arr[i]);
+				}
+			}
+
+			//สร้าง Textbox เป็น popup
+			var ct = "Lat: <input type='number' id='lat' value=" + e.latlng.lat + ">";
+			ct += "<br>Lng: <input type='number' id='lng' value=" + e.latlng.lng + "><br>";
+			ct += "Distance: <input type='text' id='distance'><br>";
+			ct += "<button onclick='sendtodb();'>Submit </button>"
+
+			var mp = new L.Marker([e.latlng.lat, e.latlng.lng]).addTo(map).bindPopup(ct).openPopup();
+			marker_arr.push(mp);
+		});
+		console.log(markerGroup);
+
+
+		L.marker([13.844967, 100.577879], {
+			icon: myIcon
+		}).bindPopup('GISTDA').addTo(markerGroup);
+		L.marker([13.844529, 100.577380]).bindPopup('โรงพยาบาลสัตว์ มหาวิทยาลัยเกษตรศาสตร์').addTo(markerGroup);
+		L.marker([13.845597, 100.578287]).bindPopup('สำนักงานการวิจัยแห่งชาติ').addTo(markerGroup);
+		L.marker([13.844621, 100.578049]).bindPopup('Golden Place').addTo(markerGroup);
+
+		var myIcon1 = L.icon({
+			iconUrl: './data/reddot.png',
+			iconSize: [40, 40],
+		});
+
+
+
+
+
+		// var villplk = L.geoJSON(pointdata, {
+		// 	pointToLayer: function (feature, latlng) {
+		// 		return L.marker(latlng, {
+		// 			icon: myIcon1
+		// 		}).bindPopup(feature.properties.VILL_NAM_T);
+		// 	}
+		// });
+
+
+
+
+
+		// var mapnu = L.tileLayer.wms('http://localhost:8080/geoserver/GISTNU/wms?', {
+		// 	layers: 'pointmap',
+		// 	format: 'image/png',
+		// 	transparent: true,
+		// 	maxZoom: 24
+
+		// }).addTo(map);
+
+
+
+
+		var overlayLayers = {
+			"Rice": ricearea,
+			"POI": markerGroup,
+			// "Mapnu": mapnu
+		};
+
+
+		map.addLayer(osm);
+		// map.addLayer(villplk);
+		L.control.layers(baseLayers, overlayLayers).addTo(map);
+
+
+
+
+		function sendtodb() {
+			//เมื่อคลิกให้ไปลบค่า showpoint ที่ถูกดึงมาจาก JSON(Database)
+			if (showpoint != null) {
+				map.removeLayer(showpoint);
+			}
+			var url = 'writedb.php';
+			var lat = document.getElementById("lat").value;
+			var lng = document.getElementById("lng").value;
+			var distance = document.getElementById("distance").value;
+			console.log(lat, lng);
+			var resp;
+			$.ajax({
+				'url': url,
+				'type': 'GET',
+				'datatype': 'text',
+				'data': {
+					lat,
+					lng,
+					distance
+				},
+				'async': false,
+				'success': function (data) {
+					resp = data;
+					pointjson = JSON.parse(data);
+					console.log(JSON.parse(data));
+
+
+					showpoint = L.geoJSON(pointjson).addTo(map);
+				}
+			});
+			console.log(resp);
+		}
+	</script>
+</body>
+
+</html>
